@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import NotificationToast from '../components/NotificationToast.jsx';
 import OrderList from '../components/OrderList.jsx';
 import { fetchMenu } from '../services/menuService.js';
-import { subscribeToOrders } from '../services/orderService.js';
+import { resetDemoOrders, subscribeToOrders } from '../services/orderService.js';
 
 export default function TenantPage() {
   const [orders, setOrders] = useState([]);
@@ -21,7 +21,7 @@ export default function TenantPage() {
 
       if (newOrders.length > prevCountRef.current && prevCountRef.current !== 0) {
         const latest = newOrders[0];
-        setToast(Pesanan Baru Masuk: ${latest?.menuName || latest?.menuId || 'Item Menu'});
+        setToast(`Pesanan Baru Masuk: ${latest?.menuName || latest?.menuId || 'Item Menu'}`);
         setTimeout(() => setToast(null), 4000);
       }
 
@@ -31,6 +31,19 @@ export default function TenantPage() {
 
     return unsubscribe;
   }, []);
+
+  async function handleReset() {
+    try {
+      const updatedMenu = await fetchMenu();
+      setMenu(updatedMenu);
+      await resetDemoOrders(updatedMenu);
+      setToast('Antrean pesanan demo berhasil di-reset!');
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error('Gagal me-reset antrean:', err);
+      alert('Gagal me-reset antrean pesanan.');
+    }
+  }
 
   const pendingOrders = orders.filter((o) => o.status === 'NEW' || o.status === 'PREPARING');
   const doneOrders = orders.filter((o) => o.status === 'DONE' || o.status === 'READY');
@@ -45,6 +58,9 @@ export default function TenantPage() {
             {connected ? 'Terhubung — Sinkronisasi real-time aktif' : 'Menghubungkan ke server…'}
           </p>
         </div>
+        <button className="secondary-button" type="button" onClick={handleReset}>
+          Reset Antrean Demo
+        </button>
       </header>
 
       {toast && <NotificationToast message={toast} />}
