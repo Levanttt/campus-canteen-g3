@@ -1,4 +1,4 @@
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
 /**
@@ -20,4 +20,19 @@ export async function createOrder(orderData) {
 
   const docRef = await addDoc(collection(db, 'orders'), payload);
   return docRef.id;
+}
+
+/**
+ * @param {(orders: Array) => void} callback 
+ * @returns {() => void} 
+ */
+export function subscribeToOrders(callback) {
+  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const orders = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    callback(orders);
+  });
 }
