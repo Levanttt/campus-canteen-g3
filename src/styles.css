@@ -396,3 +396,30 @@ h3 {
     flex-direction: column;
   }
 }
+
+/* ─── Navigasi Antar Halaman (App.jsx) ─── */
+.app-nav {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-nav a {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: background 0.15s;
+}
+
+.app-nav a:hover,
+.app-nav a.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
