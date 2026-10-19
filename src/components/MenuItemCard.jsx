@@ -10,10 +10,7 @@ export default function MenuItemCard({ menuItem, isSelected, onSelect }) {
       aria-pressed={isSelected}
     >
       <span className="card-heading">
-        <span>
-          <strong>{menuItem.name}</strong>
-          <span className="meta"> · {menuItem.tenant}</span>
-        </span>
+        <strong>{menuItem.name}</strong>
         <StatusBadge status={menuItem.availability} />
       </span>
       <span className="card-footer">
@@ -23,3 +20,4 @@ export default function MenuItemCard({ menuItem, isSelected, onSelect }) {
     </button>
   );
 }
+
