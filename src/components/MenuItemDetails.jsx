@@ -9,10 +9,10 @@ export default function MenuItemDetails({ menuItem, onPlaceOrder }) {
     return <div className="empty-state">Pilih salah satu item menu untuk melihat detailnya.</div>;
   }
 
-  const canOrder = canPlaceDemoOrder(menuItem);
+  const isAvailable = canPlaceDemoOrder(menuItem);
 
   async function handleOrderClick() {
-    if (!canOrder || isSubmitting) return;
+    if (!isAvailable || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
@@ -44,20 +44,26 @@ export default function MenuItemDetails({ menuItem, onPlaceOrder }) {
         <dt>Harga</dt>
         <dd>{formatPrice(menuItem.price)}</dd>
         <dt>Ketersediaan</dt>
-        <dd>{menuItem.availability?.replaceAll('_', ' ') ?? '—'}</dd>
+        <dd>{isAvailable ? 'Tersedia' : 'Habis'}</dd>
       </dl>
 
       <button
         className="primary-button"
         type="button"
         onClick={handleOrderClick}
-        disabled={!canOrder || isSubmitting}
+        disabled={!isAvailable || isSubmitting}
       >
-        {isSubmitting ? 'Memproses Pesanan…' : canOrder ? 'Konfirmasi & Pesan' : 'Habis'}
+        {isSubmitting
+          ? 'Memproses Pesanan…'
+          : isAvailable
+            ? 'Konfirmasi & Pesan'
+            : 'Habis (Stok Tidak Tersedia)'}
       </button>
 
-      {!canOrder && (
-        <p className="helper-text">Menu ini sedang tidak tersedia untuk dipesan.</p>
+      {!isAvailable && (
+        <p className="helper-text error-text">
+          Menu ini sedang habis dan tidak dapat dipesan saat ini.
+        </p>
       )}
     </>
   );

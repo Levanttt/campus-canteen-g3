@@ -1,15 +1,18 @@
-const successStatuses = new Set(['STORED', 'AVAILABLE', 'DONE', 'READY']);
-const infoStatuses = new Set(['FOUND', 'NEW', 'IN_PROGRESS', 'REQUESTED']);
-const warningStatuses = new Set(['PREPARING']);
-
-function getTone(status) {
-  if (successStatuses.has(status)) return 'success';
-  if (infoStatuses.has(status)) return 'info';
-  if (warningStatuses.has(status)) return 'warning';
-  return 'neutral';
-}
+const statusConfig = {
+  AVAILABLE: { label: 'Tersedia', tone: 'success' },
+  SOLD_OUT: { label: 'Habis', tone: 'danger' },
+  
+  NEW: { label: 'Baru', tone: 'info' },
+  PREPARING: { label: 'Diproses', tone: 'warning' },
+  READY: { label: 'Siap', tone: 'success' },
+  DONE: { label: 'Selesai', tone: 'success' },
+};
 
 export default function StatusBadge({ status }) {
-  const label = status.replaceAll('_', ' ');
-  return <span className={`status-badge ${getTone(status)}`}>{label}</span>;
+  const config = statusConfig[status] || {
+    label: status?.replaceAll('_', ' ') ?? 'Unknown',
+    tone: 'neutral',
+  };
+
+  return <span className={`status-badge ${config.tone}`}>{config.label}</span>;
 }
