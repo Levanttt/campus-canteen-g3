@@ -1,12 +1,26 @@
+import { useState } from 'react';
 import { canPlaceDemoOrder, formatPrice } from '../utils/orderUtils.js';
 import StatusBadge from './StatusBadge.jsx';
 
 export default function MenuItemDetails({ menuItem, onPlaceOrder }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   if (!menuItem) {
     return <div className="empty-state">Pilih salah satu item menu untuk melihat detailnya.</div>;
   }
 
   const canOrder = canPlaceDemoOrder(menuItem);
+
+  async function handleOrderClick() {
+    if (!canOrder || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      await onPlaceOrder(menuItem.id);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -36,13 +50,15 @@ export default function MenuItemDetails({ menuItem, onPlaceOrder }) {
       <button
         className="primary-button"
         type="button"
-        onClick={() => onPlaceOrder?.(menuItem.id)}
-        disabled={!canOrder}
+        onClick={handleOrderClick}
+        disabled={!canOrder || isSubmitting}
       >
-        {canOrder ? 'Pesan' : 'Habis'}
+        {isSubmitting ? 'Memproses Pesanan…' : canOrder ? 'Konfirmasi & Pesan' : 'Habis'}
       </button>
-      {!canOrder && <p className="helper-text">Menu ini sedang tidak tersedia.</p>}
+
+      {!canOrder && (
+        <p className="helper-text">Menu ini sedang tidak tersedia untuk dipesan.</p>
+      )}
     </>
   );
 }
-

@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import MenuItemDetails from '../components/MenuItemDetails.jsx';
 import MenuItemList from '../components/MenuItemList.jsx';
 import { fetchMenu } from '../services/menuService.js';
+import { createOrder } from '../services/orderService.js';
+import { canPlaceDemoOrder } from '../utils/orderUtils.js';
 
 export default function CustomerPage() {
   const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [orderNotification, setOrderNotification] = useState(null);
 
   useEffect(() => {
     loadMenu();
@@ -21,10 +24,38 @@ export default function CustomerPage() {
       setMenu(data);
       setSelectedId(data[0]?.id ?? null);
     } catch (err) {
-      console.error('Gagal mengambil data menu dari Firestore:', err);
-      setError('Gagal memuat katalog menu dari database eksternal. Periksa konfigurasi Firebase atau koneksi internet.');
+      console.error('Gagal memuat katalog menu:', err);
+      setError('Gagal memuat data menu dari database.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handlePlaceOrder(menuId) {
+    const menuItem = menu.find((item) => item.id === menuId);
+
+    if (!menuItem || !canPlaceDemoOrder(menuItem)) {
+      alert('Transaksi ditolak: Item menu ini tidak tersedia.');
+      return;
+    }
+
+    try {
+      const payload = {
+        menuId: menuItem.id,
+        menuName: menuItem.name,
+        price: menuItem.price,
+        tenant: menuItem.tenant || 'Campus Kitchen',
+        status: 'NEW',
+        createdAt: new Date(),
+      };
+
+      await createOrder(payload);
+
+      setOrderNotification(` Pesanan "${menuItem.name}" berhasil dibuat dan dikirim ke tenant!`);
+      setTimeout(() => setOrderNotification(null), 4000);
+    } catch (err) {
+      console.error('Gagal memproses transaksi pesanan:', err);
+      alert('Gagal mengirimkan pesanan ke database. Silakan coba lagi.');
     }
   }
 
@@ -53,14 +84,18 @@ export default function CustomerPage() {
         <div>
           <p className="eyebrow">Campus Canteen</p>
           <h1>Campus Canteen Ordering</h1>
-          <p className="subtitle">
-            Katalog menu resmi kantin kampus yang terhubung dengan database eksternal.
-          </p>
+          <p className="subtitle">Pilih menu dan lakukan pemesanan langsung ke tenant.</p>
         </div>
         <button className="secondary-button" type="button" onClick={loadMenu}>
-          Reset Demo
+          Reset Menu Demo
         </button>
       </header>
+
+      {orderNotification && (
+        <p className="browser-note" role="status">
+          {orderNotification}
+        </p>
+      )}
 
       <section className="overview-grid" aria-label="Ringkasan Menu">
         <article className="summary-card">
@@ -83,7 +118,10 @@ export default function CustomerPage() {
           />
         </section>
         <aside className="panel" aria-label="Detail Menu yang Dipilih">
-          <MenuItemDetails menuItem={selectedMenuItem} />
+          <MenuItemDetails
+            menuItem={selectedMenuItem}
+            onPlaceOrder={handlePlaceOrder}
+          />
         </aside>
       </section>
     </main>
