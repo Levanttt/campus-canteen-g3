@@ -1,10 +1,9 @@
-import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, onSnapshot, orderBy, query, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
 /**
- * US-2.3 — Mengirimkan (POST) data transaksi pesanan baru ke koleksi "orders" di Firestore.
- * @param {Object} orderData Payload pesanan (menuId, menuName, price, status, createdAt)
- * @returns {Promise<string>} ID dokumen pesanan yang berhasil dibuat di Firestore
+ * @param {Object} orderData 
+ * @returns {Promise<string>} 
  */
 export async function createOrder(orderData) {
   // Validasi payload sebelum dikirim
@@ -35,4 +34,34 @@ export function subscribeToOrders(callback) {
     }));
     callback(orders);
   });
+}
+
+export async function resetDemoOrders(menuList = []) {
+  const snapshot = await getDocs(collection(db, 'orders'));
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((d) => {
+    batch.delete(doc(db, 'orders', d.id));
+  });
+  await batch.commit();
+
+  if (menuList.length > 0) {
+    const firstItem = menuList[0];
+    const secondItem = menuList[1] || firstItem;
+
+    await addDoc(collection(db, 'orders'), {
+      menuId: firstItem.id,
+      menuName: firstItem.name,
+      status: 'PREPARING',
+      createdAt: new Date(Date.now() - 5 * 60 * 1000),
+    });
+
+    if (menuList.length > 1) {
+      await addDoc(collection(db, 'orders'), {
+        menuId: secondItem.id,
+        menuName: secondItem.name,
+        status: 'READY',
+        createdAt: new Date(Date.now() - 2 * 60 * 1000),
+      });
+    }
+  }
 }
